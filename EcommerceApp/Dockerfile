@@ -1,22 +1,16 @@
-# ---------- Stage 1: Build ----------
+# ---------- Build Stage ----------
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copy pom.xml first (for dependency caching)
-COPY pom.xml .
+# Copy everything
+COPY . .
 
-# Download dependencies
-RUN mvn dependency:go-offline
-
-# Copy source code
-COPY src ./src
-
-# Build the application
+# Build jar
 RUN mvn clean package -DskipTests
 
 
-# ---------- Stage 2: Run ----------
+# ---------- Run Stage ----------
 FROM eclipse-temurin:17-jdk-alpine
 
 WORKDIR /app
@@ -24,6 +18,8 @@ WORKDIR /app
 # Copy jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
+# Expose default Spring Boot port
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run application
+ENTRYPOINT ["java","-jar","app.jar"]
